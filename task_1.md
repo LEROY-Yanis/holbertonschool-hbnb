@@ -16,4 +16,10 @@ classDiagram
         + update()
         + delete()
     }
+
+    class Administrator{
+        + modify(entity)
+    }
+
+    
  ```
