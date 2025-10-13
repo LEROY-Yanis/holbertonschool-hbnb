@@ -37,6 +37,7 @@ classDiagram
     Client --> ReviewEntity : emits
     Owner --> PlaceEntity : possess
     PlaceEntity --> ReviewEntity
+    PlaceEntity --> AmenityEntity
 
     class AmenityEntity{
     }
