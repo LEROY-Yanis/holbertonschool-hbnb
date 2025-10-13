@@ -34,5 +34,4 @@ classDiagram
         + deletePlace(place)
         + listPlaces()
     }
-
  ```
