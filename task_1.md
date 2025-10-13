@@ -3,7 +3,7 @@ classDiagram
     direction TD
 
     User <|-- Client
-    User <|-- Administrator
+    User <|-- Administrator : Yanis
     User <|-- Owner
 
     class User{
@@ -21,5 +21,8 @@ classDiagram
         + modify(entity)
     }
 
-    
+    class Client{
+        + book(place)
+        + review(place, rating)
+    }
  ```
