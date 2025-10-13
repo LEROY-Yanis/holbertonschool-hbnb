@@ -1,15 +1,21 @@
 ```mermaid
 classDiagram
     class PresentationLayer {
-      +ServiceAPI
+      +UserService
+      +PPlaceService
+      +APIEndpoint
     }
     
     class BusinessLogicLayer {
-      +ModelClasses
+      +User
+      +Place
+      +Review
+      +Amenity
     }
     
     class PersistenceLayer {
-      +DatabaseAccess
+      +Database Access
+      +Repositories
     }
     
     PresentationLayer --> BusinessLogicLayer : FacadePattern
