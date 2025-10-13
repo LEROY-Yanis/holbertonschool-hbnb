@@ -21,8 +21,6 @@ classDiagram
         + modify(entity)
     }
 
-    }
-
     class Client{
         + book(place)
         + review(place, rating)
