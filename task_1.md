@@ -32,4 +32,16 @@ classDiagram
         + deletePlace(place)
         + listPlaces()
     }
- ```
+
+    Client --> PlaceEntity : rent
+    Client --> ReviewEntity : emits
+    Owner --> PlaceEntity : possess
+    PlaceEntity --> ReviewEntity
+
+    class AmenityEntity{
+    }
+    class ReviewEntity{
+    }
+    class PlaceEntity{
+    }
+```
