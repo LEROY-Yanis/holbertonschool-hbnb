@@ -2,7 +2,7 @@
 classDiagram
     class PresentationLayer {
       +UserService
-      +PPlaceService
+      +PlaceService
       +APIEndpoint
     }
     
