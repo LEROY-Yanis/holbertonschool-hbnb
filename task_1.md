@@ -21,8 +21,18 @@ classDiagram
         + modify(entity)
     }
 
+    }
+
     class Client{
         + book(place)
         + review(place, rating)
     }
+
+    class Owner{
+        + createPlace(place)
+        + updatePlace(place)
+        + deletePlace(place)
+        + listPlaces()
+    }
+
  ```
