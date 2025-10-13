@@ -40,9 +40,18 @@ classDiagram
     PlaceEntity --> AmenityEntity
 
     class AmenityEntity{
+    - name: Str
+    - description: Str
     }
     class ReviewEntity{
+    - rating: Int
+    - comment: String
     }
     class PlaceEntity{
+    - title: String
+    - description: String
+    - price: Float
+    - longitude: Float
+    - latitude: Float
     }
 ```
