@@ -1,3 +1,7 @@
+# Sequence Diagrams for API Calls
+
+# 1 - User Registration
+
 ```mermaid
 sequenceDiagram
     participant User as Frontend
@@ -43,3 +47,9 @@ sequenceDiagram
     deactivate Logic
     deactivate Service
 ```
+
+# 2 - Place Creation
+
+# 3 - Review Submission
+
+# 4 - Fetching a List of Places
