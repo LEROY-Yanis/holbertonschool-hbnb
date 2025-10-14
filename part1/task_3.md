@@ -50,6 +50,39 @@ sequenceDiagram
 
 # 2 - Place Creation
 
+```mermaid
+sequenceDiagram
+    participant User as Frontend
+    participant Service as HBnB Service
+    participant Logic as Business Logic Layer
+    participant Storage as Database (Backend)
+
+    User->>Service: POST /users/login
+    activate Service
+    Note right of Service: User login request
+
+    Service->>Logic: authenticateUser(credentials)
+    activate Logic
+
+    alt User not found
+        Logic-->>Service: User not found
+        Service-->>User: HTTP 404 Not Found
+    else Incorrect password
+        Logic-->>Service: Incorrect password
+        Service-->>User: HTTP 401 Unauthorized
+    else Success
+        Logic->>Storage: getUserSession(userId)
+        activate Storage
+        Storage-->>Logic: session data
+        Logic-->>Service: success response
+        Service-->>User: HTTP 200 OK
+    end
+
+    deactivate Storage
+    deactivate Logic
+    deactivate Service
+```
+
 # 3 - Review Submission
 
 # 4 - Fetching a List of Places
