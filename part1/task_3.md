@@ -71,7 +71,7 @@ sequenceDiagram
         Logic-->>API: Incorrect password
         API-->>User: HTTP 401 Unauthorized
     else Success
-        Logic->>Storage: getUserSession(userId)
+        Logic->>Storage: get User Session(userId)
         activate Storage
         Storage-->>Logic: session data
         Logic-->>API: success response
@@ -96,14 +96,14 @@ sequenceDiagram
     activate API
     Note right of API: Fetch user profile request
 
-    API->>Logic: getUserProfile(userId)
+    API->>Logic: get User Profile(userId)
     activate Logic
 
     alt User not found
         Logic-->>API: User not found
         API-->>User: HTTP 404 Not Found
     else Success
-        Logic->>Storage: retrieveUserProfile(userId)
+        Logic->>Storage: retrieve User Profile(userId)
         activate Storage
         Storage-->>Logic: session data
         Logic-->>API: success response
@@ -116,3 +116,16 @@ sequenceDiagram
 ```
 
 # 4 - Fetching a List of Places
+
+```mermaid
+sequenceDiagram
+    participant User as Frontend
+    participant API as HBnB API
+    participant Logic as Business Logic Layer
+    participant Storage as Database (Backend)
+
+    User->>API: PUT /users/profile
+    activate API
+    Note right of API: Update user profile request
+
+```
