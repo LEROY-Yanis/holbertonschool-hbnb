@@ -11,7 +11,7 @@ sequenceDiagram
 
     User->>API: POST /users/register
     activate API
-    Note right of Service: User registration request
+    Note right of API: User registration request
 
     alt Invalid form data
         User-->>User: Show "Invalid input" message
@@ -59,7 +59,7 @@ sequenceDiagram
 
     User->>API: POST /users/login
     activate API
-    Note right of Service: User login request
+    Note right of API: User login request
 
     API->>Logic: authenticateUser(credentials)
     activate Logic
