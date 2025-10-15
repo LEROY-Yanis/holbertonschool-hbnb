@@ -60,37 +60,220 @@ classDiagram
 # task_1 Detailed Class Diagram for Business Logic Layer
 
 # note
+Here’s the text formatted for a presentation in prompt mode, including explanatory notes and the code for the class diagram in a format suitable for a written document.
 
-# code
+Class Diagram for the Business Logic Layer of the HBnB Application
+Explanatory Notes
+1. Key Entities
+The class diagram represents the key entities within the business logic layer, namely User, PlaceEntity, ReviewEntity, and AmenityEntity.
+
+
+User
+
+Attributes:
+
+id: Unique identifier of type String.
+firstName: First name of the user.
+lastName: Last name of the user.
+mail: User's email address.
+password: User's password.
+
+
+Methods:
+
+register(): Allows a user to register.
+update(): Updates the user's information.
+delete(): Deletes the user.
+
+
+Role: Base class for different user types (Client, Administrator, Owner).
+
+
+
+Client
+
+Methods:
+
+book(place): Books a place.
+review(place, rating): Submits a review for a place.
+
+
+Relation: Inherits from User. Has associations with PlaceEntity and ReviewEntity.
+
+
+
+Administrator
+
+Methods:
+
+modify(entity): Modifies an entity (can be a place, a review, etc.).
+
+
+Relation: Inherits from User.
+
+
+
+Owner
+
+Methods:
+
+createPlace(place): Creates a new place.
+updatePlace(place): Updates an existing place.
+deletePlace(place): Deletes a place.
+listPlaces(): Lists all owned places.
+
+
+Relation: Inherits from User. Has an association with PlaceEntity.
+
+
+
+2. Associated Entities
+
+
+PlaceEntity
+
+Attributes:
+
+title: Title of the place.
+description: Description of the place.
+price: Rental price.
+longitude: Longitude coordinate.
+latitude: Latitude coordinate.
+
+
+Relations:
+
+Has an association with ReviewEntity (a place can have multiple reviews).
+Has an association with AmenityEntity (a place can have multiple amenities).
+
+
+
+
+
+ReviewEntity
+
+Attributes:
+
+rating: Rating given to the place (integer).
+comment: Comment left by the client.
+
+
+Relation: Is associated with PlaceEntity (a review is linked to a place).
+
+AmenityEntity
+
+Attributes:
+
+name: Name of the amenity.
+description: Description of the amenity.
+
+Relation: Is associated with PlaceEntity (amenities are linked to a place).
+
+3. Relationships and Multiplicity
+
+Inheritance: The User class serves as the base class for Client, Administrator, and Owner, allowing them to share common attributes and methods.
+Associations:
+
+Client has relationships with PlaceEntity (for booking) and ReviewEntity (for submitting reviews).
+Owner has a ownership relationship with PlaceEntity, indicating that an owner can manage multiple places.
+PlaceEntity has relationships with ReviewEntity and AmenityEntity, indicating that a place can have multiple reviews and amenities.
+
+
+
+Class Diagram Code
 ```mermaid
 classDiagram
-    class PresentationLayer {
-      +UserService
-      +PlaceService
-      +APIEndpoint
+    direction TD
+
+    User <|-- Client
+    User <|-- Administrator
+    User <|-- Owner
+
+    class User {
+        - id: String
+        - firstName: String
+        - lastName: String
+        - mail: String
+        - password: String
+        + register()
+        + update()
+        + delete()
     }
-    
-    class BusinessLogicLayer {
-      +User
-      +Place
-      +Review
-      +Amenity
+
+    class Administrator {
+        + modify(entity)
     }
-    
-    class PersistenceLayer {
-      +Database Access
-      +Repositories
+
+    class Client {
+        + book(place)
+        + review(place, rating)
     }
-    
-    PresentationLayer --> BusinessLogicLayer : FacadePattern
-    BusinessLogicLayer --> PersistenceLayer : DatabaseOperations
+
+    class Owner {
+        + createPlace(place)
+        + updatePlace(place)
+        + deletePlace(place)
+        + listPlaces()
+    }
+
+    Client --> PlaceEntity : rents
+    Client --> ReviewEntity : emits
+    Owner --> PlaceEntity : owns
+    PlaceEntity --> ReviewEntity : has
+    PlaceEntity --> AmenityEntity : includes
+
+    class AmenityEntity {
+        - name: String
+        - description: String
+    }
+
+    class ReviewEntity {
+        - rating: Int
+        - comment: String
+    }
+
+    class PlaceEntity {
+        - title: String
+        - description: String
+        - price: Float
+        - longitude: Float
+        - latitude: Float
+    }
 ```
+
+Conclusion
+This class diagram provides a clear and detailed representation of the business logic of the HBnB application, illustrating the key entities and their interactions. It is essential to follow these recommendations to ensure that the diagram meets project requirements and accurately reflects the application's structure.
 
 # task_2 Sequence Diagrams for API Calls
 
 # note
 
-# code
+API Calls to Model
+User Registration: A user signs up for a new account.
+Place Creation: A user creates a new place listing.
+Review Submission: A user submits a review for a place.
+Fetching a List of Places: A user requests a list of places based on certain criteria.
+Steps to Complete the Task
+
+1. Understand the Use Cases
+Review Requirements: Examine the requirements and business logic for each selected API call.
+Sequence of Operations: Understand the sequence of operations needed to fulfill each API call, from the moment a request is received by the API to the point where a response is returned to the client.
+
+2. Identify Key Components Involved
+Determine Components: Identify which components of the system (within each layer) are involved in handling each API call.
+Order of Operations: Identify the order of operations, including method calls and data exchanges between components.
+
+3. Design the Sequence Diagrams
+Draft Interactions: Begin by drafting the sequence of interactions for each API call.
+Sequence Diagram: For each diagram, start with the API call from the Presentation Layer, followed by interactions with the Business Logic Layer, and ending with operations in the Persistence Layer.
+Flow of Messages: Clearly show the flow of messages, including method invocations, data retrieval, and processing steps.
+
+4. Refine and Review
+Review Your Diagrams: Ensure they accurately reflect the flow of information and operations required to fulfill each API call.
+Clarity and Completeness: Refine the diagrams for clarity and completeness, ensuring all relevant interactions are captured.
+
+# code 
+
 # 1 - User Registration
 
 ```mermaid
