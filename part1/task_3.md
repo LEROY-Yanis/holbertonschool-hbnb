@@ -110,7 +110,7 @@ sequenceDiagram
         API-->>User: HTTP 200 OK
     end
 
-    deactivate storage
+    deactivate Storage
     deactivate Logic
     deactivate API
 ```
