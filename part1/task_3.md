@@ -128,4 +128,21 @@ sequenceDiagram
     activate API
     Note right of API: Update user profile request
 
+    API->>Logic: update User Profile(userId, profileData)
+    activate Logic
+
+    alt invalid data
+        Logic-->>API: Validation failed
+        API-->>User: HTTP 400 Bad Request
+    else Success
+        Logic->>Storage: save User Profile(userId, profileData)
+        activate Storage
+        Storage-->>Logic: session data
+        Logic-->>API: success response
+        API-->>User: HTTP 200 OK
+    end
+
+    deactivate API
+    deactivate Logic
+    deactivate Storage
 ```
