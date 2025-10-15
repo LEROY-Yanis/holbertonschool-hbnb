@@ -92,7 +92,27 @@ sequenceDiagram
     participant Logic as Business Logic Layer
     participant Storage as Database (Backend)
 
-    
+    User->>API: GET /users/profile
+    activate API
+    Note right of API: Fetch user profile request
+
+    API->>Logic: getUserProfile(userId)
+    activate Logic
+
+    alt User not found
+        Logic-->>API: User not found
+        API-->>User: HTTP 404 Not Found
+    else Success
+        Logic->>Storage: retrieveUserProfile(userId)
+        activate Storage
+        Storage-->>Logic: session data
+        Logic-->>API: success response
+        Service-->>User: HTTP 200 OK
+    end
+
+    deactivate storage
+    deactivate Logic
+    deactivate API
 ```
 
 # 4 - Fetching a List of Places
