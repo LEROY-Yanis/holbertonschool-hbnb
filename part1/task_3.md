@@ -75,7 +75,7 @@ sequenceDiagram
         activate Storage
         Storage-->>Logic: session data
         Logic-->>API: success response
-        Service-->>User: HTTP 200 OK
+        API-->>User: HTTP 200 OK
     end
 
     deactivate Storage
@@ -107,7 +107,7 @@ sequenceDiagram
         activate Storage
         Storage-->>Logic: session data
         Logic-->>API: success response
-        Service-->>User: HTTP 200 OK
+        API-->>User: HTTP 200 OK
     end
 
     deactivate storage
