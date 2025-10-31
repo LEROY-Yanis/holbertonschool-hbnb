@@ -14,5 +14,9 @@ def create_app():
     from .api.v1.places import api_plc
     from .api.v1.reviews import api_rvw
     # Additional namespaces for places, reviews, and amenities will be added later
+    api.add_namespace(api_usr, path='/api/v1/users')
+    api.add_namespace(api_amnt, path='/api/v1/amenities')
+    api.add_namespace(api_plc, path='/api/v1/places')
+    api.add_namespace(api_rvw, path='/api/v1/reviews')
 
     return app
