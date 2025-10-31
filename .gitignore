@@ -14,7 +14,7 @@
 #Ignorer les fichiers main.py spécifiquement
 *main.py
 #Ignorer les fichiers pycache
-*pycache
+*__pycache__
 #Ignorer les fichiers .json spécifiquement
 *.json
 #Ignorer les fichiers .csv spécifiquement
