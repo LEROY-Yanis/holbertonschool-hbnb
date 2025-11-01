@@ -1,43 +1,60 @@
-import uuid
+from app.models.basemodel import BaseModel
 
-class Place:
-	def __init__(self, name, description=None, title=None, id=None, price=None, latitude=None, longitude=None, owner=None):
-		if title is None:
-			raise ValueError("title is empty")
-		if price <= 0:
-			raise ValueError("the price must be bigger of 0") 
-		if len(latitude) < 90 or len(latitude) > 90:
+class Place(BaseModel):
+	def __init__(self, title, description, price, latitude, longitude, owner_id, id=None, created_at=None, updated_at=None):
+		super().__init__(id, created_at, updated_at)
+
+		if not title or len(title.strip()) == 0:
+			raise ValueError("title is required")
+		if price is None or price <= 0:
+			raise ValueError("price must be greater than 0") 
+		if latitude is None or latitude < -90 or latitude > 90:
 			raise ValueError("latitude must be between -90 and 90")
-		if len(longitude) < 180 or len(longitude) > 180:
+		if longitude is None or longitude < -180 or longitude > 180:
 			raise ValueError("longitude must be between -180 and 180")
+		if not owner_id:
+			raise ValueError("owner_id is required")
 
-		self.id = id or str(uuid.uuid4())
-		self.name = name
-		self.description = description
 		self.title = title
+		self.description = description
 		self.price = price
 		self.latitude = latitude
 		self.longitude = longitude
-		self.owner = owner
+		self.owner_id = owner_id
 		self.reviews = []  # List to store related reviews
-		self.amenities = []  # List to store related amenities
-
-		place_model = api.model('Place', {
-    		'title': fields.String(required=True, description='Title of the place'),
-    		'description': fields.String(description='Description of the place'),
-    		'price': fields.Float(required=True, description='Price per night'),
-    		'latitude': fields.Float(required=True, description='Latitude of the place'),
-    		'longitude': fields.Float(required=True, description='Longitude of the place'),
-    		'owner_id': fields.String(required=True, description='ID of the owner'),
-    		'owner': fields.Nested(user_model, description='Owner of the place'),
-    		'amenities': fields.List(fields.Nested(amenity_model), description='List of amenities'),
-    		'reviews': fields.List(fields.Nested(review_model), description='List of reviews')
-		})
+		self.amenities = []  # List to store related amenity IDs
 
 	def to_dict(self):
-		return {'id': self.id, 'name': self.name, 'description': self.description}
+		return {
+			'id': self.id,
+			'title': self.title,
+			'description': self.description,
+			'price': self.price,
+			'latitude': self.latitude,
+			'longitude': self.longitude,
+			'owner_id': self.owner_id,
+			'created_at': self.created_at,
+			'updated_at': self.updated_at
+		}
 
 	def update(self, data):
 		for k, v in data.items():
-			if k in ('name', 'description'):
+			if k == 'title':
+				if not v or len(v.strip()) == 0:
+					raise ValueError("title is required")
 				setattr(self, k, v)
+			elif k == 'description':
+				setattr(self, k, v)
+			elif k == 'price':
+				if v is None or v <= 0:
+					raise ValueError("price must be greater than 0")
+				setattr(self, k, v)
+			elif k == 'latitude':
+				if v is None or v < -90 or v > 90:
+					raise ValueError("latitude must be between -90 and 90")
+				setattr(self, k, v)
+			elif k == 'longitude':
+				if v is None or v < -180 or v > 180:
+					raise ValueError("longitude must be between -180 and 180")
+				setattr(self, k, v)
+		self.save()
