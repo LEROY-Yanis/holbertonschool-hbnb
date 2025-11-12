@@ -1,4 +1,5 @@
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.services import facade
 
 api_usr = Namespace('users', description='User operations')
@@ -48,4 +49,29 @@ class UserResource(Resource):
         if not user:
             return {'error': 'User not found'}, 404
         # Use to_dict() to ensure password is not included
+        return user.to_dict(), 200
+    
+    @jwt_required()
+    @api_usr.response(200, 'User updated successfully')
+    @api_usr.response(404, 'User not found')
+    @api_usr.response(403, 'Unauthorized action')
+    def put(self, user_id):
+        """Update user details (requires authentication)"""
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        
+        # Only allow users to update their own profile or admins to update any profile
+        if current_user_id != user_id and not claims.get('is_admin'):
+            return {'error': 'Unauthorized action'}, 403
+        
+        user = facade.get_user(user_id)
+        if not user:
+            return {'error': 'User not found'}, 404
+        
+        user_data = api_usr.payload
+        # Prevent updating password through this endpoint
+        if 'password' in user_data:
+            del user_data['password']
+        
+        facade.update_user(user_id, user_data)
         return user.to_dict(), 200
