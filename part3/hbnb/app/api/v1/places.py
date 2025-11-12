@@ -1,4 +1,5 @@
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.services import facade
 
 api_plc = Namespace('places', description='Place operations')
@@ -29,13 +30,21 @@ place_model = api_plc.model('Place', {
 
 @api_plc.route('/')
 class PlaceList(Resource):
+    @jwt_required()
     @api_plc.expect(place_model)
     @api_plc.response(201, 'Place successfully created')
     @api_plc.response(400, 'Invalid input data')
+    @api_plc.response(403, 'Unauthorized action')
     def post(self):
-        """Register a new place"""
+        """Register a new place (requires authentication)"""
         try:
+            current_user_id = get_jwt_identity()
             place_data = api_plc.payload
+            
+            # Ensure the owner_id matches the authenticated user (unless admin)
+            claims = get_jwt()
+            if place_data.get('owner_id') != current_user_id and not claims.get('is_admin'):
+                return {'error': 'Unauthorized action'}, 403
             
             # Validate owner exists
             owner = facade.get_user(place_data.get('owner_id'))
@@ -168,15 +177,24 @@ class PlaceResource(Resource):
             'updated_at': place.updated_at
         }, 200
 
+    @jwt_required()
     @api_plc.expect(place_model)
     @api_plc.response(200, 'Place updated successfully')
     @api_plc.response(404, 'Place not found')
     @api_plc.response(400, 'Invalid input data')
+    @api_plc.response(403, 'Unauthorized action')
     def put(self, place_id):
-        """Update a place's information"""
+        """Update a place's information (requires authentication and ownership or admin)"""
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        
         place = facade.get_place(place_id)
         if not place:
             return {'error': 'Place not found'}, 404
+        
+        # Check if user is owner or admin
+        if place.owner_id != current_user_id and not claims.get('is_admin'):
+            return {'error': 'Unauthorized action'}, 403
         
         try:
             place_data = api_plc.payload
