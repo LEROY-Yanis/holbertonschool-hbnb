@@ -1,8 +1,9 @@
 import re
 from app.models.basemodel import BaseModel
+from app.extention import bcrypt
 
 class User(BaseModel):
-    def __init__(self, email, first_name, last_name, is_admin=False, id=None, created_at=None, updated_at=None):
+    def __init__(self, email, first_name, last_name, password=None, is_admin=False, id=None, created_at=None, updated_at=None):
         super().__init__(id, created_at, updated_at)
 
         if len(first_name) == 0 or len(first_name) > 50:
@@ -21,9 +22,19 @@ class User(BaseModel):
         self.last_name = last_name
         self.email = email
         self.is_admin = is_admin
+        self.password = password  # Store the hashed password
         self.validate()
 
+    def hash_password(self, password):
+        """Hash the password using bcrypt before storing it."""
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def verify_password(self, password):
+        """Verify a password against the hashed password."""
+        return bcrypt.check_password_hash(self.password, password)
+
     def to_dict(self):
+        """Return dictionary representation without password."""
         return {
             'id': self.id,
             'email': self.email,
