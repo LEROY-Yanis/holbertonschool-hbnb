@@ -17,7 +17,7 @@ Le projet suit une architecture en couches basée sur les design patterns suivan
 ┌─────────────────────────────────────────┐
 │    API Layer (Flask-RESTX Routes)       │
 │  users.py, amenities.py, places.py      │
-│              reviews.py                  │
+│              reviews.py                 │
 └────────────────┬────────────────────────┘
                  │ Appelle méthodes
                  ↓
@@ -31,14 +31,14 @@ Le projet suit une architecture en couches basée sur les design patterns suivan
 ┌─────────────────────────────────────────┐
 │      Model Layer (Entités)              │
 │  User, Place, Review, Amenity           │
-│          BaseModel                       │
+│          BaseModel                      │
 └────────────────┬────────────────────────┘
                  │ Persisté via
                  ↓
 ┌─────────────────────────────────────────┐
 │   Persistence Layer (Repository)        │
-│      InMemoryRepository                  │
-│         _storage (dict)                  │
+│      InMemoryRepository                 │
+│         _storage (dict)                 │
 └─────────────────────────────────────────┘
 ```
 
