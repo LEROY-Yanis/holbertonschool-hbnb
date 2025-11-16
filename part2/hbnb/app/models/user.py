@@ -2,7 +2,7 @@ import re
 from app.models.basemodel import BaseModel
 
 class User(BaseModel):
-    def __init__(self, email, first_name, last_name, is_admin=False, id=None, created_at=None, updated_at=None):
+    def __init__(self, first_name, last_name, email, is_admin=False, id=None, created_at=None, updated_at=None):
         super().__init__(id, created_at, updated_at)
 
         if len(first_name) == 0 or len(first_name) > 50:
