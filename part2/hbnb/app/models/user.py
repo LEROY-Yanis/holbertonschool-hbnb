@@ -21,7 +21,6 @@ class User(BaseModel):
         self.last_name = last_name
         self.email = email
         self.is_admin = is_admin
-        self.validate()
 
     def to_dict(self):
         return {
