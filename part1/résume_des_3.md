@@ -1,119 +1,130 @@
 # HBnB Technical Documentation
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [High-Level Architecture](#high-level-architecture)
-3. [Business Logic Layer](#business-logic-layer)
-4. [API Interaction Flow](#api-interaction-flow)
+
+1. [Introduction](#1-introduction)
+2. [High-Level Architecture](#2-high-level-architecture)
+3. [Business Logic Layer](#3-business-logic-layer)
+4. [API Interaction Flow](#4-api-interaction-flow)
 
 ---
 
-## Introduction
+## 1. Introduction
 
-### Purpose
-This technical document serves as a comprehensive reference guide for the HBnB (Holberton Bed and Breakfast) application development. It provides a detailed overview of the system architecture, business logic components, and API interaction flows that will guide the implementation process.
+### 1.1 Purpose
 
-### Project Overview
-HBnB is a web-based platform that enables users to list, discover, and book accommodations. The application follows a modern three-tier architecture pattern, implementing industry best practices for maintainability, scalability, and separation of concerns.
+This document provides a technical blueprint for the HBnB (Holberton Bed and Breakfast) application. It guides developers through the architecture, data models, and API design.
 
-### Document Scope
-This document contains:
-- **High-Level Architecture**: System layering and communication patterns
-- **Business Logic Layer**: Detailed class structures and relationships
-- **API Interaction Flow**: Step-by-step sequence diagrams for core operations
+### 1.2 Project Overview
 
-### Audience
-This document is intended for:
-- Software developers implementing the application
-- System architects reviewing the design
-- QA engineers developing test strategies
-- Technical stakeholders requiring system understanding
+HBnB is a web platform for listing and discovering accommodations. Users can:
+- Register and manage profiles
+- Create place listings
+- Write reviews for places
+- Associate amenities with places
+
+### 1.3 Document Scope
+
+| Section | Content |
+|---------|---------|
+| High-Level Architecture | Three-tier layered design with Facade pattern |
+| Business Logic Layer | Entity classes, attributes, and relationships |
+| API Interaction Flow | Sequence diagrams for API operations |
 
 ---
 
-## High-Level Architecture
+## 2. High-Level Architecture
 
-### Overview
-The HBnB application follows a **three-tier layered architecture** that separates concerns and promotes modularity. This design enables independent development, testing, and scaling of each layer.
+### 2.1 Overview
 
-### Package Diagram
+The application uses a **three-tier layered architecture** with the **Facade Pattern** for inter-layer communication.
+
+### 2.2 Package Diagram
 
 ```mermaid
 classDiagram
     class PresentationLayer {
-      +UserService
-      +PlaceService
-      +APIEndpoint
+        <<API>>
+        +Flask-RESTX Endpoints
+        +Request/Response Handling
+        +Input Validation
     }
-    
+
     class BusinessLogicLayer {
-      +User
-      +Place
-      +Review
-      +Amenity
+        <<Core>>
+        +User
+        +Place
+        +Review
+        +Amenity
     }
-    
+
     class PersistenceLayer {
-      +Database access
-      +Repositories
+        <<Storage>>
+        +InMemoryRepository
+        +CRUD Operations
     }
-    
-    PresentationLayer --> BusinessLogicLayer : Facade Pattern
-    BusinessLogicLayer --> PersistenceLayer : Database Operations
+
+    PresentationLayer --> BusinessLogicLayer : HBnBFacade
+    BusinessLogicLayer --> PersistenceLayer : Repository Pattern
 ```
 
-### Layer Descriptions
+### 2.3 Layer Descriptions
 
-#### Presentation Layer
+#### Presentation Layer (API)
+
+Handles HTTP requests via Flask-RESTX.
+
 | Component | Responsibility |
-|-----------|---------------|
-| **APIEndpoint** | Handles HTTP requests/responses, routing, and serialization |
-| **UserService** | Manages user-related API operations (registration, authentication, profile) |
-| **PlaceService** | Handles place listing, search, and booking operations |
+|-----------|----------------|
+| `api/v1/users.py` | User endpoints (POST, GET, PUT) |
+| `api/v1/places.py` | Place endpoints |
+| `api/v1/reviews.py` | Review endpoints |
+| `api/v1/amenities.py` | Amenity endpoints |
 
-**Design Rationale**: The Presentation Layer acts as the entry point for all client interactions. It validates incoming requests, delegates business operations to the Business Logic Layer, and formats responses for clients.
+#### Business Logic Layer (Models)
 
-#### Business Logic Layer
-| Component | Responsibility |
-|-----------|---------------|
-| **User** | Encapsulates user data and behavior (validation, authentication logic) |
-| **Place** | Manages place properties, pricing, and availability |
-| **Review** | Handles review creation, validation, and aggregation |
-| **Amenity** | Represents features and facilities of places |
+Contains domain entities with validation logic.
 
-**Design Rationale**: This layer contains all domain logic, ensuring that business rules are centralized and reusable regardless of how they are accessed (API, CLI, etc.).
+| Model | Description |
+|-------|-------------|
+| `BaseModel` | Common attributes (id, created_at, updated_at) |
+| `User` | User registration and profile |
+| `Place` | Accommodation listings |
+| `Review` | User feedback for places |
+| `Amenity` | Place features (WiFi, Pool, etc.) |
 
 #### Persistence Layer
-| Component | Responsibility |
-|-----------|---------------|
-| **Repositories** | Abstract data access patterns (CRUD operations) |
-| **Database Access** | Manages connections, queries, and transactions |
 
-**Design Rationale**: The Persistence Layer isolates database operations, enabling easy switching between storage solutions (in-memory, SQL, NoSQL) without affecting business logic.
+Manages data storage via repository pattern.
 
-### Communication Patterns
+| Component | Description |
+|-----------|-------------|
+| `InMemoryRepository` | In-memory storage with CRUD operations |
+| `HBnBFacade` | Service layer coordinating repositories |
 
-#### Facade Pattern
-The **Facade Pattern** is used between the Presentation and Business Logic layers:
-- Provides a simplified interface to complex subsystems
-- Reduces coupling between layers
-- Centralizes cross-cutting concerns (logging, validation, error handling)
+### 2.4 Facade Pattern
 
-#### Data Flow
+The `HBnBFacade` class provides a unified interface:
+
+```python
+class HBnBFacade:
+    def __init__(self):
+        self.user_repo = InMemoryRepository()
+        self.place_repo = InMemoryRepository()
+        self.review_repo = InMemoryRepository()
+        self.amenity_repo = InMemoryRepository()
 ```
-Client Request → Presentation Layer → Facade → Business Logic → Persistence → Database
-                                                                              ↓
-Client Response ← Presentation Layer ← Facade ← Business Logic ← Persistence ←
-```
+
+**Benefits**:
+- Simplifies API layer code
+- Centralizes business operations
+- Decouples layers for easier testing
 
 ---
 
-## Business Logic Layer
+## 3. Business Logic Layer
 
-### Overview
-The Business Logic Layer contains the core domain entities of the HBnB application. All entities inherit from a common `BaseModel` class that provides shared functionality for identification, timestamps, and persistence operations.
-
-### Class Diagram
+### 3.1 Class Diagram
 
 ```mermaid
 classDiagram
@@ -123,16 +134,13 @@ classDiagram
         +DateTime updated_at
         +save()
         +update(data)
-        +delete()
     }
 
     class User {
         +String first_name
         +String last_name
         +String email
-        +String password
         +Boolean is_admin
-        +create_user()
     }
 
     class Place {
@@ -141,21 +149,22 @@ classDiagram
         +Float price
         +Float latitude
         +Float longitude
-        +String owner_id
+        +User owner
+        +List~Review~ reviews
         +List~Amenity~ amenities
-        +add_amenity(amenity_id)
+        +add_review(review)
+        +add_amenity(amenity)
     }
 
     class Review {
         +String text
         +Integer rating
-        +String user_id
-        +String place_id
+        +Place place
+        +User user
     }
 
     class Amenity {
         +String name
-        +String description
     }
 
     BaseModel <|-- User
@@ -163,412 +172,228 @@ classDiagram
     BaseModel <|-- Review
     BaseModel <|-- Amenity
 
-    User "1" --o "0..*" Place : owns
-    User "1" --o "0..*" Review : writes
-    Place "1" *-- "0..*" Review : has_reviews
-    Place "0..*" --o "0..*" Amenity : features
+    User "1" --o "*" Place : owns
+    User "1" --o "*" Review : writes
+    Place "1" *-- "*" Review : contains
+    Place "*" o-- "*" Amenity : has
 ```
 
-### Entity Descriptions
+### 3.2 Entity Specifications
 
-#### BaseModel (Abstract Parent Class)
+#### BaseModel
+
+Base class with common attributes.
+
 | Attribute | Type | Description |
 |-----------|------|-------------|
-| `id` | String (UUID) | Unique identifier for each entity |
-| `created_at` | DateTime | Timestamp of entity creation |
-| `updated_at` | DateTime | Timestamp of last modification |
+| `id` | String (UUID4) | Unique identifier |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
 
 | Method | Description |
 |--------|-------------|
-| `save()` | Persist the entity to storage |
-| `update(data)` | Modify entity attributes and update timestamp |
-| `delete()` | Remove entity from storage |
-
-**Design Rationale**: Centralizing common attributes and methods in `BaseModel` ensures consistency across all entities and reduces code duplication.
+| `save()` | Updates `updated_at` timestamp |
+| `update(data)` | Updates attributes from dictionary |
 
 #### User
+
 | Attribute | Type | Constraints |
 |-----------|------|-------------|
-| `first_name` | String | Required, max 50 characters |
-| `last_name` | String | Required, max 50 characters |
-| `email` | String | Required, unique, valid email format |
-| `password` | String | Required, hashed, min 8 characters |
-| `is_admin` | Boolean | Default: false |
+| `first_name` | String | Required, max 50 chars |
+| `last_name` | String | Required, max 50 chars |
+| `email` | String | Required, valid format, unique |
+| `is_admin` | Boolean | Default: False |
 
-**Business Rules**:
-- Email must be unique across all users
-- Password must be securely hashed before storage
-- Admin users have elevated privileges for moderation
+**Validation**: Email format validated with regex, names must be non-empty strings.
 
 #### Place
+
 | Attribute | Type | Constraints |
 |-----------|------|-------------|
-| `title` | String | Required, max 100 characters |
-| `description` | String | Optional, max 2000 characters |
-| `price` | Float | Required, positive value |
-| `latitude` | Float | Required, range: -90 to 90 |
-| `longitude` | Float | Required, range: -180 to 180 |
-| `owner_id` | String | Required, references User.id |
-| `amenities` | List | Collection of associated amenities |
-
-**Business Rules**:
-- A place must have an owner (User)
-- Price must be a positive number
-- Geographic coordinates must be valid
+| `title` | String | Required, max 100 chars |
+| `description` | String | Optional |
+| `price` | Float | Required, must be positive |
+| `latitude` | Float | Required, -90.0 to 90.0 |
+| `longitude` | Float | Required, -180.0 to 180.0 |
+| `owner` | User | Required, User instance |
+| `reviews` | List | List of Review objects |
+| `amenities` | List | List of Amenity objects |
 
 #### Review
+
 | Attribute | Type | Constraints |
 |-----------|------|-------------|
-| `text` | String | Required, max 1000 characters |
-| `rating` | Integer | Required, range: 1 to 5 |
-| `user_id` | String | Required, references User.id |
-| `place_id` | String | Required, references Place.id |
-
-**Business Rules**:
-- A user cannot review their own place
-- Rating must be between 1 and 5
-- One review per user per place
+| `text` | String | Required |
+| `rating` | Integer | Required, 1 to 5 |
+| `place` | Place | Required, Place instance |
+| `user` | User | Required, User instance |
 
 #### Amenity
+
 | Attribute | Type | Constraints |
 |-----------|------|-------------|
-| `name` | String | Required, unique, max 50 characters |
-| `description` | String | Optional, max 255 characters |
+| `name` | String | Required, max 50 chars |
 
-**Business Rules**:
-- Amenity names must be unique
-- Examples: WiFi, Parking, Pool, Kitchen
-
-### Entity Relationships
+### 3.3 Relationships
 
 | Relationship | Type | Description |
-|-------------|------|-------------|
-| User → Place | One-to-Many (Aggregation) | A user can own multiple places; places can exist independently |
-| User → Review | One-to-Many (Aggregation) | A user can write multiple reviews |
-| Place → Review | One-to-Many (Composition) | Reviews are dependent on place existence |
-| Place ↔ Amenity | Many-to-Many (Aggregation) | Places can have multiple amenities; amenities can belong to multiple places |
+|--------------|------|-------------|
+| User → Place | One-to-Many | User owns multiple places |
+| User → Review | One-to-Many | User writes multiple reviews |
+| Place → Review | Composition | Reviews belong to place |
+| Place ↔ Amenity | Many-to-Many | Places have multiple amenities |
 
 ---
 
-## API Interaction Flow
-
-### Overview
-This section presents sequence diagrams illustrating the flow of API calls through the system layers. Each diagram shows the interactions between the Frontend, Service Layer, Business Logic, and Database, including error handling scenarios.
-
----
+## 4. API Interaction Flow
 
 ### 4.1 User Registration
 
-**Endpoint**: `POST /users/register`
-
-**Purpose**: Create a new user account in the system.
+**Endpoint**: `POST /api/v1/users/`
 
 ```mermaid
 sequenceDiagram
-    participant User as Frontend
-    participant Service as HBnB Service
-    participant Logic as Business Logic Layer
-    participant Storage as Database (Backend)
+    participant Client
+    participant API as UserList
+    participant Facade as HBnBFacade
+    participant Repo as InMemoryRepository
 
-    User->>Service: POST /users/register
-    activate Service
-    Note right of Service: User registration request
-
-    alt Invalid form data
-        Service-->>User: Show "Invalid input" message
-    else Valid data
-        Service->>Logic: registerUser(userData)
-        activate Logic
-
-        alt Validation error
-            Logic-->>Service: Validation failed
-            Service-->>User: HTTP 400 Bad Request
-            Note left of User: Display validation error
-        else Valid request
-            Logic->>Storage: saveUser(userData)
-            activate Storage
-
-            alt Database unreachable
-                Storage-->>Logic: error "Connection timeout"
-                Logic-->>Service: HTTP 500 Internal Server Error
-                Service-->>User: Show "Service unavailable"
-            else Duplicate user
-                Storage-->>Logic: error "Duplicate entry"
-                Logic-->>Service: HTTP 422 Conflict
-                Service-->>User: Show "User already exists"
-            else Success
-                Storage-->>Logic: new user record
-                Logic-->>Service: success response
-                Service-->>User: HTTP 201 Created
-            end
-            deactivate Storage
-        end
+    Client->>API: POST /api/v1/users/
+    Note right of API: {first_name, last_name, email}
+    
+    API->>Facade: get_user_by_email(email)
+    Facade->>Repo: get_by_attribute('email', email)
+    
+    alt Email exists
+        Repo-->>Facade: User found
+        Facade-->>API: existing_user
+        API-->>Client: 400 {"error": "Email already registered"}
+    else Email available
+        Repo-->>Facade: None
+        API->>Facade: create_user(user_data)
+        Facade->>Facade: User(**user_data)
+        Facade->>Repo: add(user)
+        Repo-->>Facade: User stored
+        Facade-->>API: new_user
+        API-->>Client: 201 {id, first_name, last_name, email}
     end
-
-    deactivate Logic
-    deactivate Service
 ```
 
-**Key Components**:
-- **Frontend**: Collects user registration data (name, email, password)
-- **Service Layer**: Validates input format and orchestrates the registration process
-- **Business Logic**: Applies business rules (email uniqueness, password requirements)
-- **Database**: Persists the new user record
-
-**HTTP Response Codes**:
-| Code | Meaning |
-|------|---------|
-| 201 | User successfully created |
-| 400 | Invalid input data format |
-| 422 | Business rule violation (duplicate email) |
-| 500 | Server/database error |
-
----
+**Response Codes**:
+| Code | Condition |
+|------|-----------|
+| 201 | User created |
+| 400 | Email exists or invalid data |
 
 ### 4.2 Place Creation
 
-**Endpoint**: `POST /places`
-
-**Purpose**: Allow authenticated users to create new place listings.
+**Endpoint**: `POST /api/v1/places/`
 
 ```mermaid
 sequenceDiagram
-    participant User as Frontend
-    participant Service as HBnB Service
-    participant Logic as Business Logic Layer
-    participant Storage as Database (Backend)
+    participant Client
+    participant API as PlaceList
+    participant Facade as HBnBFacade
+    participant Repo as InMemoryRepository
 
-    User->>Service: POST /places
-    activate Service
-    Note right of Service: Place creation request
-
-    alt Invalid form data
-        Service-->>User: HTTP 400 Bad Request
-        Note left of User: Show "Invalid input"
-    else Valid data
-        Service->>Logic: createPlace(placeData, userId)
-        activate Logic
-
-        alt Validation error (e.g. missing title)
-            Logic-->>Service: Validation failed
-            Service-->>User: HTTP 422 Unprocessable Entity
-            Note left of User: Show validation errors
-        else Valid request
-            Logic->>Storage: savePlace(placeData, userId)
-            activate Storage
-
-            alt Database unreachable
-                Storage-->>Logic: error "Connection timeout"
-                Logic-->>Service: HTTP 500 Internal Server Error
-                Service-->>User: Show "Service unavailable"
-            else Duplicate place (same title/location)
-                Storage-->>Logic: error "Duplicate entry"
-                Logic-->>Service: HTTP 409 Conflict
-                Service-->>User: Show "Place already exists"
-            else Success
-                Storage-->>Logic: new place record
-                Logic-->>Service: success response
-                Service-->>User: HTTP 201 Created (place JSON)
-            end
-
-            deactivate Storage
-        end
-        deactivate Logic
+    Client->>API: POST /api/v1/places/
+    Note right of API: {title, price, latitude, longitude, owner_id}
+    
+    API->>Facade: get_user(owner_id)
+    Facade->>Repo: get(owner_id)
+    
+    alt Owner not found
+        Repo-->>Facade: None
+        API-->>Client: 400 {"error": "Invalid owner_id"}
+    else Owner exists
+        Repo-->>Facade: User
+        API->>Facade: create_place(place_data)
+        Facade->>Facade: Place(**place_data)
+        Facade->>Repo: add(place)
+        API-->>Client: 201 {id, title, price, ...}
     end
-
-    deactivate Service
 ```
 
-**Key Components**:
-- **Frontend**: Collects place details (title, description, price, location, amenities)
-- **Service Layer**: Authenticates user and validates input
-- **Business Logic**: Validates place data and associates with owner
-- **Database**: Stores place record with relationships
-
-**HTTP Response Codes**:
-| Code | Meaning |
-|------|---------|
-| 201 | Place successfully created |
-| 400 | Invalid input data format |
-| 409 | Duplicate place detected |
-| 422 | Business rule violation |
-| 500 | Server/database error |
-
----
+**Response Codes**:
+| Code | Condition |
+|------|-----------|
+| 201 | Place created |
+| 400 | Invalid data or owner not found |
 
 ### 4.3 Review Submission
 
-**Endpoint**: `POST /places/{placeId}/reviews`
-
-**Purpose**: Allow users to submit reviews for places they have visited.
+**Endpoint**: `POST /api/v1/places/<place_id>/reviews`
 
 ```mermaid
 sequenceDiagram
-    participant User as Frontend
-    participant Service as HBnB Service
-    participant Logic as Business Logic Layer
-    participant Storage as Database (Backend)
+    participant Client
+    participant API as ReviewList
+    participant Facade as HBnBFacade
+    participant Repo as InMemoryRepository
 
-    User->>Service: POST /places/{placeId}/reviews
-    activate Service
-    Note right of Service: Review submission request
-
-    alt Invalid form data
-        Service-->>User: HTTP 400 Bad Request
-        Note left of User: Show "Invalid input"
-    else Valid data
-        Service->>Logic: addReview(placeId, userId, reviewData)
-        activate Logic
-
-        alt Validation error (rating out of range, empty comment)
-            Logic-->>Service: Validation failed
-            Service-->>User: HTTP 422 Unprocessable Entity
-            Note left of User: Show validation errors
-        else Valid request
-            Logic->>Storage: getPlaceById(placeId)
-            activate Storage
-
-            alt Place not found
-                Storage-->>Logic: null
-                Logic-->>Service: HTTP 404 Not Found
-                Service-->>User: Show "Place not found"
-            else Place exists
-                Storage-->>Logic: place record
-
-                alt User not allowed (e.g. never booked)
-                    Logic-->>Service: HTTP 403 Forbidden
-                    Service-->>User: Show "You cannot review this place"
-                else User allowed
-                    Logic->>Storage: saveReview(placeId, userId, reviewData)
-                    alt Database error
-                        Storage-->>Logic: error "Insert failed"
-                        Logic-->>Service: HTTP 500 Internal Server Error
-                        Service-->>User: Show "Service unavailable"
-                    else Success
-                        Storage-->>Logic: new review record
-                        Logic-->>Service: success response
-                        Service-->>User: HTTP 201 Created (review JSON)
-                    end
-                end
-            end
-
-            deactivate Storage
+    Client->>API: POST /places/{place_id}/reviews
+    Note right of API: {text, rating, user_id}
+    
+    API->>Facade: get_place(place_id)
+    
+    alt Place not found
+        Facade-->>API: None
+        API-->>Client: 404 {"error": "Place not found"}
+    else Place exists
+        API->>Facade: get_user(user_id)
+        alt User not found
+            Facade-->>API: None
+            API-->>Client: 400 {"error": "Invalid user_id"}
+        else Valid
+            API->>Facade: create_review(review_data)
+            Facade->>Repo: add(review)
+            API-->>Client: 201 {id, text, rating, ...}
         end
-
-        deactivate Logic
     end
-
-    deactivate Service
 ```
 
-**Key Components**:
-- **Frontend**: Collects review text and rating
-- **Service Layer**: Validates input and authenticates user
-- **Business Logic**: Verifies place exists and user eligibility
-- **Database**: Stores review with associations
-
-**HTTP Response Codes**:
-| Code | Meaning |
-|------|---------|
-| 201 | Review successfully created |
-| 400 | Invalid input data format |
-| 403 | User not authorized to review |
+**Response Codes**:
+| Code | Condition |
+|------|-----------|
+| 201 | Review created |
+| 400 | Invalid data |
 | 404 | Place not found |
-| 422 | Business rule violation |
-| 500 | Server/database error |
 
----
+### 4.4 Fetch Places List
 
-### 4.4 Fetching Places (with Filters)
-
-**Endpoint**: `GET /places?city=...&min_price=...`
-
-**Purpose**: Retrieve a list of places based on search criteria.
+**Endpoint**: `GET /api/v1/places/`
 
 ```mermaid
 sequenceDiagram
-    participant User as Frontend
-    participant Service as HBnB Service
-    participant Logic as Business Logic Layer
-    participant Storage as Database (Backend)
+    participant Client
+    participant API as PlaceList
+    participant Facade as HBnBFacade
+    participant Repo as InMemoryRepository
 
-    User->>Service: GET /places?city=...&min_price=...
-    activate Service
-    Note right of Service: Fetch places with filters
-
-    alt Invalid query params
-        Service-->>User: HTTP 400 Bad Request
-        Note left of User: Show "Invalid filters"
-    else Valid query
-        Service->>Logic: getPlaces(filters)
-        activate Logic
-
-        alt Validation error (e.g. bad date range)
-            Logic-->>Service: Validation failed
-            Service-->>User: HTTP 422 Unprocessable Entity
-            Note left of User: Show validation errors
-        else Valid request
-            Logic->>Storage: findPlacesByFilters(filters)
-            activate Storage
-
-            alt Database unreachable
-                Storage-->>Logic: error "Connection timeout"
-                Logic-->>Service: HTTP 500 Internal Server Error
-                Service-->>User: Show "Service unavailable"
-            else Success
-                Storage-->>Logic: list of places (possibly empty)
-                Logic-->>Service: success response
-                Service-->>User: HTTP 200 OK (places list)
-                Note left of User: Display results (or "No places found")
-            end
-
-            deactivate Storage
-        end
-
-        deactivate Logic
-    end
-
-    deactivate Service
+    Client->>API: GET /api/v1/places/
+    API->>Facade: get_all_places()
+    Facade->>Repo: get_all()
+    Repo-->>Facade: [Place, Place, ...]
+    Facade-->>API: places list
+    API-->>Client: 200 [{id, title, price}, ...]
 ```
 
-**Key Components**:
-- **Frontend**: Provides search filters (location, price range, amenities)
-- **Service Layer**: Parses and validates query parameters
-- **Business Logic**: Applies filter logic and business rules
-- **Database**: Executes optimized queries with filters
+**Response Codes**:
+| Code | Condition |
+|------|-----------|
+| 200 | Success (may be empty list) |
 
-**HTTP Response Codes**:
+---
+
+## 5. HTTP Status Codes
+
 | Code | Meaning |
 |------|---------|
-| 200 | Success (may return empty array) |
-| 400 | Invalid query parameters |
-| 422 | Business rule violation |
-| 500 | Server/database error |
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad Request / Validation Error |
+| 404 | Not Found |
 
 ---
 
-## Summary
-
-This technical document provides a comprehensive blueprint for the HBnB application implementation. The key architectural decisions include:
-
-1. **Three-Tier Architecture**: Clear separation between presentation, business logic, and persistence layers
-2. **Facade Pattern**: Simplified interface between layers, reducing coupling
-3. **Inheritance Model**: All entities inherit from `BaseModel` for consistency
-4. **RESTful API Design**: Standard HTTP methods and status codes for predictable behavior
-5. **Comprehensive Error Handling**: Multiple error scenarios handled at each layer
-
-### Implementation Priorities
-
-| Priority | Component | Rationale |
-|----------|-----------|-----------|
-| 1 | BaseModel & Entities | Foundation for all business logic |
-| 2 | Persistence Layer | Enable data storage early |
-| 3 | Business Logic Validation | Ensure data integrity |
-| 4 | API Endpoints | Expose functionality to clients |
-| 5 | Error Handling | Production readiness |
-
----
-
-*Document Version: 1.0*  
-*Last Updated: February 2026*  
-*Project: HBnB - Holberton Bed and Breakfast*
+*Version: 1.0 | HBnB Project | February 2026*
