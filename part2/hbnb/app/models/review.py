@@ -76,3 +76,13 @@ class Review(BaseModel):
         if not isinstance(value, User):
             raise ValueError("User must be a valid User instance")
         self._user = value
+
+    @property
+    def user_id(self):
+        """Get the user's ID."""
+        return self._user.id if self._user else None
+
+    @property
+    def place_id(self):
+        """Get the place's ID."""
+        return self._place.id if self._place else None

@@ -15,13 +15,19 @@ user_model = api.model('User', {
 
 @api.route('/')
 class UserList(Resource):
-    @api.expect(user_model, validate=True)
+    @api.expect(user_model)
     @api.response(201, 'User successfully created')
     @api.response(400, 'Email already registered')
     @api.response(400, 'Invalid input data')
     def post(self):
         """Register a new user"""
         user_data = api.payload
+
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'email']
+        for field in required_fields:
+            if field not in user_data:
+                return {'error': f'{field} is required'}, 400
 
         # Check email uniqueness
         existing_user = facade.get_user_by_email(user_data['email'])
@@ -40,20 +46,6 @@ class UserList(Resource):
             'email': new_user.email
         }, 201
 
-    @api.response(200, 'List of users retrieved successfully')
-    def get(self):
-        """Retrieve a list of all users"""
-        users = facade.get_all_users()
-        return [
-            {
-                'id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email
-            }
-            for user in users
-        ], 200
-
 
 @api.route('/<user_id>')
 class UserResource(Resource):
@@ -71,7 +63,7 @@ class UserResource(Resource):
             'email': user.email
         }, 200
 
-    @api.expect(user_model, validate=True)
+    @api.expect(user_model)
     @api.response(200, 'User successfully updated')
     @api.response(404, 'User not found')
     @api.response(400, 'Invalid input data')

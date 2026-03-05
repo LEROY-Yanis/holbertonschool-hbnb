@@ -78,7 +78,90 @@ Environment-specific settings are defined in `config.py`. You can set the follow
 
 - `SECRET_KEY`: Application secret key (default: 'default_secret_key')
 
+## Testing
+
+### Running Unit Tests
+
+```bash
+# Run model tests
+python tests/test_models.py
+
+# Run API endpoint tests
+python -m unittest tests.test_api -v
+```
+
+### Running cURL Tests
+
+First, start the server in one terminal:
+```bash
+python run.py
+```
+
+Then run the cURL tests in another terminal:
+```bash
+bash tests/test_curl.sh
+```
+
+### Test Coverage
+
+| Component | Tests | Status |
+|-----------|-------|--------|
+| User Model | 3 tests | ✅ |
+| Place Model | 3 tests | ✅ |
+| Review Model | 2 tests | ✅ |
+| Amenity Model | 2 tests | ✅ |
+| User API | 10 tests | ✅ |
+| Amenity API | 8 tests | ✅ |
+| Place API | 10 tests | ✅ |
+| Review API | 14 tests | ✅ |
+
+### Validation Rules
+
+| Entity | Attribute | Validation |
+|--------|-----------|------------|
+| User | first_name | Required, max 50 chars |
+| User | last_name | Required, max 50 chars |
+| User | email | Required, valid format, unique |
+| User | is_admin | Boolean |
+| Place | title | Required, max 100 chars |
+| Place | price | Required, positive number |
+| Place | latitude | -90.0 to 90.0 |
+| Place | longitude | -180.0 to 180.0 |
+| Place | owner_id | Required, must exist |
+| Review | text | Required |
+| Review | rating | 1 to 5 |
+| Review | user_id | Required, must exist |
+| Review | place_id | Required, must exist |
+| Amenity | name | Required, max 50 chars |
+
+## API Endpoints
+
+### Users
+- `POST /api/v1/users/` - Create user
+- `GET /api/v1/users/` - List all users
+- `GET /api/v1/users/<id>` - Get user by ID
+- `PUT /api/v1/users/<id>` - Update user
+
+### Amenities
+- `POST /api/v1/amenities/` - Create amenity
+- `GET /api/v1/amenities/` - List all amenities
+- `GET /api/v1/amenities/<id>` - Get amenity by ID
+- `PUT /api/v1/amenities/<id>` - Update amenity
+
+### Places
+- `POST /api/v1/places/` - Create place
+- `GET /api/v1/places/` - List all places
+- `GET /api/v1/places/<id>` - Get place by ID
+- `PUT /api/v1/places/<id>` - Update place
+- `GET /api/v1/places/<id>/reviews` - Get place reviews
+
+### Reviews
+- `POST /api/v1/reviews/` - Create review
+- `GET /api/v1/reviews/` - List all reviews
+- `GET /api/v1/reviews/<id>` - Get review by ID
+- `PUT /api/v1/reviews/<id>` - Update review
+- `DELETE /api/v1/reviews/<id>` - Delete review
+
 ## Future Development
 
 - Part 3 will replace the in-memory repository with a database-backed solution using SQLAlchemy
-- API endpoints will be implemented in subsequent tasks

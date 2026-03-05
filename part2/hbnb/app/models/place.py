@@ -112,6 +112,11 @@ class Place(BaseModel):
             raise ValueError("Owner must be a valid User instance")
         self._owner = value
 
+    @property
+    def owner_id(self):
+        """Get the owner's ID."""
+        return self._owner.id if self._owner else None
+
     def add_review(self, review):
         """Add a review to the place.
 

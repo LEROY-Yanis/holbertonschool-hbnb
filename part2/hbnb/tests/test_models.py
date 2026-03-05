@@ -18,17 +18,17 @@ def test_user_creation():
     print("Testing User creation...")
     
     # Test successful user creation
-    user = User(first_name="John", last_name="Doe", email="john.doe@example.com")
+    user = User(first_name="John", last_name="Doe", email="john.doe@hbnb.io")
     assert user.first_name == "John"
     assert user.last_name == "Doe"
-    assert user.email == "john.doe@example.com"
+    assert user.email == "john.doe@hbnb.io"
     assert user.is_admin is False  # Default value
     assert user.id is not None
     assert user.created_at is not None
     assert user.updated_at is not None
     
     # Test admin user creation
-    admin_user = User(first_name="Admin", last_name="User", email="admin@example.com", is_admin=True)
+    admin_user = User(first_name="Admin", last_name="User", email="admin@hbnb.io", is_admin=True)
     assert admin_user.is_admin is True
     
     print("User creation test passed!")
@@ -41,14 +41,14 @@ def test_user_validation():
     
     # Test invalid first_name
     try:
-        User(first_name="", last_name="Doe", email="test@example.com")
+        User(first_name="", last_name="Doe", email="test@hbnb.io")
         assert False, "Should have raised ValueError for empty first_name"
     except ValueError as e:
         assert "First name" in str(e)
     
     # Test first_name too long
     try:
-        User(first_name="A" * 51, last_name="Doe", email="test@example.com")
+        User(first_name="A" * 51, last_name="Doe", email="test@hbnb.io")
         assert False, "Should have raised ValueError for first_name too long"
     except ValueError as e:
         assert "50 characters" in str(e)
@@ -68,7 +68,7 @@ def test_user_update():
     """Test User update functionality."""
     print("Testing User update...")
     
-    user = User(first_name="John", last_name="Doe", email="john.doe@example.com")
+    user = User(first_name="John", last_name="Doe", email="john.doe@hbnb.io")
     original_updated_at = user.updated_at
     
     # Wait a moment to ensure timestamp changes
@@ -87,7 +87,7 @@ def test_place_creation():
     """Test Place class creation and validation."""
     print("Testing Place creation...")
     
-    owner = User(first_name="Alice", last_name="Smith", email="alice.smith@example.com")
+    owner = User(first_name="Alice", last_name="Smith", email="alice.smith@hbnb.io")
     place = Place(
         title="Cozy Apartment",
         description="A nice place to stay",
@@ -115,7 +115,7 @@ def test_place_validation():
     """Test Place validation."""
     print("Testing Place validation...")
     
-    owner = User(first_name="Alice", last_name="Smith", email="alice.smith@example.com")
+    owner = User(first_name="Alice", last_name="Smith", email="alice.smith@hbnb.io")
     
     # Test invalid price (negative)
     try:
@@ -153,7 +153,7 @@ def test_place_relationships():
     """Test Place class with relationships."""
     print("Testing Place relationships...")
     
-    owner = User(first_name="Alice", last_name="Smith", email="alice.smith@example.com")
+    owner = User(first_name="Alice", last_name="Smith", email="alice.smith@hbnb.io")
     place = Place(
         title="Cozy Apartment",
         description="A nice place to stay",
@@ -183,7 +183,7 @@ def test_review_creation():
     """Test Review class creation and validation."""
     print("Testing Review creation...")
     
-    owner = User(first_name="Bob", last_name="Jones", email="bob.jones@example.com")
+    owner = User(first_name="Bob", last_name="Jones", email="bob.jones@hbnb.io")
     place = Place(
         title="Nice House",
         description="A beautiful house",
@@ -193,7 +193,7 @@ def test_review_creation():
         owner=owner
     )
     
-    reviewer = User(first_name="Carol", last_name="White", email="carol.white@example.com")
+    reviewer = User(first_name="Carol", last_name="White", email="carol.white@hbnb.io")
     review = Review(text="Lovely place!", rating=4, place=place, user=reviewer)
     
     assert review.text == "Lovely place!"
@@ -210,7 +210,7 @@ def test_review_validation():
     """Test Review validation."""
     print("Testing Review validation...")
     
-    owner = User(first_name="Bob", last_name="Jones", email="bob.jones@example.com")
+    owner = User(first_name="Bob", last_name="Jones", email="bob.jones@hbnb.io")
     place = Place(
         title="Nice House",
         description="A beautiful house",
