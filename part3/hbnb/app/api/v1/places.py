@@ -2,6 +2,7 @@
 """Places API endpoints."""
 
 from flask_restx import Namespace, Resource, fields
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.services import facade
 
 api = Namespace('places', description='Place operations')
@@ -26,7 +27,16 @@ place_model = api.model('Place', {
     'price': fields.Float(required=True, description='Price per night'),
     'latitude': fields.Float(required=True, description='Latitude of the place'),
     'longitude': fields.Float(required=True, description='Longitude of the place'),
-    'owner_id': fields.String(required=True, description='ID of the owner'),
+    'amenities': fields.List(fields.String, description='List of amenity IDs')
+})
+
+# Place update model
+place_update_model = api.model('PlaceUpdate', {
+    'title': fields.String(description='Title of the place'),
+    'description': fields.String(description='Description of the place'),
+    'price': fields.Float(description='Price per night'),
+    'latitude': fields.Float(description='Latitude of the place'),
+    'longitude': fields.Float(description='Longitude of the place'),
     'amenities': fields.List(fields.String, description='List of amenity IDs')
 })
 
@@ -72,13 +82,22 @@ class PlaceList(Resource):
     @api.expect(place_model)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
+    @api.response(401, 'Missing or invalid token')
     @api.marshal_with(place_response_model, code=201)
+    @jwt_required()
     def post(self):
         """Create a new place."""
-        place_data = api.payload
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        is_admin = claims.get('is_admin', False)
+        place_data = dict(api.payload or {})
+
+        # Admin can create a place for any owner, regular users can only create for themselves.
+        if not is_admin or 'owner_id' not in place_data:
+            place_data['owner_id'] = current_user_id
 
         # Validate required fields
-        required_fields = ['title', 'price', 'latitude', 'longitude', 'owner_id']
+        required_fields = ['title', 'price', 'latitude', 'longitude']
         for field in required_fields:
             if field not in place_data:
                 return {'error': f'{field} is required'}, 400
@@ -112,19 +131,29 @@ class PlaceResource(Resource):
             return {'error': 'Place not found'}, 404
         return place_to_dict(place), 200
 
-    @api.expect(place_model)
+    @api.expect(place_update_model)
     @api.response(200, 'Place successfully updated')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
+    @api.response(403, 'Unauthorized action')
     @api.marshal_with(place_response_model)
+    @jwt_required()
     def put(self, place_id):
         """Update place information."""
-        place_data = api.payload
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        is_admin = claims.get('is_admin', False)
 
         # Check if place exists
         place = facade.get_place(place_id)
         if not place:
             return {'error': 'Place not found'}, 404
+
+        # Check ownership - only owner or admin can modify
+        if place.owner_id != current_user_id and not is_admin:
+            return {'error': 'Unauthorized action'}, 403
+
+        place_data = dict(api.payload or {})
 
         # Don't allow changing owner
         if 'owner_id' in place_data:
@@ -136,6 +165,29 @@ class PlaceResource(Resource):
             return {'error': str(e)}, 400
 
         return place_to_dict(updated_place), 200
+
+    @api.response(200, 'Place successfully deleted')
+    @api.response(404, 'Place not found')
+    @api.response(403, 'Unauthorized action')
+    @jwt_required()
+    def delete(self, place_id):
+        """Delete a place."""
+        from app import db
+
+        current_user_id = get_jwt_identity()
+        claims = get_jwt()
+        is_admin = claims.get('is_admin', False)
+
+        place = facade.get_place(place_id)
+        if not place:
+            return {'error': 'Place not found'}, 404
+
+        if place.owner_id != current_user_id and not is_admin:
+            return {'error': 'Unauthorized action'}, 403
+
+        db.session.delete(place)
+        db.session.commit()
+        return {'message': 'Place deleted successfully'}, 200
 
 
 @api.route('/<place_id>/reviews')
@@ -154,8 +206,8 @@ class PlaceReviewList(Resource):
                 'id': review.id,
                 'text': review.text,
                 'rating': review.rating,
-                'user_id': review.user.id,
-                'place_id': review.place.id
+                'user_id': review.user_id,
+                'place_id': review.place_id
             }
             for review in reviews
         ], 200

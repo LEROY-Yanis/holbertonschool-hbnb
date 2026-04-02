@@ -1,35 +1,46 @@
 #!/usr/bin/env python3
 """Place model module."""
 
+from app import db
 from app.models import BaseModel
+
+
+# Association table for many-to-many relationship between Place and Amenity
+place_amenity = db.Table('place_amenity',
+    db.Column('place_id', db.String(36), db.ForeignKey('places.id'), primary_key=True),
+    db.Column('amenity_id', db.String(36), db.ForeignKey('amenities.id'), primary_key=True)
+)
 
 
 class Place(BaseModel):
     """Place class representing a rental property in the system."""
 
-    def __init__(self, title, description, price, latitude, longitude, owner):
-        """Initialize a Place instance.
+    __tablename__ = 'places'
 
-        Args:
-            title (str): The title of the place. Required, max 100 chars.
-            description (str): Detailed description of the place. Optional.
-            price (float): The price per night. Must be positive.
-            latitude (float): Latitude coordinate. Must be between -90.0 and 90.0.
-            longitude (float): Longitude coordinate. Must be between -180.0 and 180.0.
-            owner (User): User instance who owns the place.
+    _title = db.Column('title', db.String(100), nullable=False)
+    _description = db.Column('description', db.Text, default="")
+    _price = db.Column('price', db.Float, nullable=False)
+    _latitude = db.Column('latitude', db.Float, nullable=False)
+    _longitude = db.Column('longitude', db.Float, nullable=False)
+    _owner_id = db.Column('owner_id', db.String(36), db.ForeignKey('users.id'), nullable=False)
 
-        Raises:
-            ValueError: If validation fails for any attribute.
-        """
-        super().__init__()
+    # Relationships
+    reviews = db.relationship('Review', backref='place', lazy=True, cascade='all, delete-orphan')
+    amenities = db.relationship('Amenity', secondary=place_amenity, lazy='subquery',
+                                 backref=db.backref('places', lazy=True))
+
+    def __init__(self, title, description, price, latitude, longitude, owner=None, owner_id=None, **kwargs):
+        """Initialize a Place instance."""
+        super().__init__(**kwargs)
         self.title = title
         self.description = description
         self.price = price
         self.latitude = latitude
         self.longitude = longitude
-        self.owner = owner
-        self.reviews = []  # List to store related reviews
-        self.amenities = []  # List to store related amenities
+        if owner:
+            self._owner_id = owner.id
+        elif owner_id:
+            self._owner_id = owner_id
 
     @property
     def title(self):
@@ -100,35 +111,20 @@ class Place(BaseModel):
         self._longitude = float(value)
 
     @property
-    def owner(self):
-        """Get the owner."""
-        return self._owner
-
-    @owner.setter
-    def owner(self, value):
-        """Set the owner with validation."""
-        from app.models.user import User
-        if not isinstance(value, User):
-            raise ValueError("Owner must be a valid User instance")
-        self._owner = value
-
-    @property
     def owner_id(self):
         """Get the owner's ID."""
-        return self._owner.id if self._owner else None
+        return self._owner_id
+
+    @owner_id.setter
+    def owner_id(self, value):
+        """Set the owner ID."""
+        self._owner_id = value
 
     def add_review(self, review):
-        """Add a review to the place.
-
-        Args:
-            review: Review instance to add.
-        """
+        """Add a review to the place."""
         self.reviews.append(review)
 
     def add_amenity(self, amenity):
-        """Add an amenity to the place.
-
-        Args:
-            amenity: Amenity instance to add.
-        """
-        self.amenities.append(amenity)
+        """Add an amenity to the place."""
+        if amenity not in self.amenities:
+            self.amenities.append(amenity)

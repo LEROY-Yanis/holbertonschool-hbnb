@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 """Amenity model module."""
 
+from app import db
 from app.models import BaseModel
 
 
 class Amenity(BaseModel):
     """Amenity class representing an amenity that can be associated with places."""
 
-    def __init__(self, name, description=""):
-        """Initialize an Amenity instance.
+    __tablename__ = 'amenities'
 
-        Args:
-            name (str): The name of the amenity. Required, max 50 chars.
-            description (str): Description of the amenity. Optional.
+    _name = db.Column('name', db.String(50), nullable=False, unique=True)
+    _description = db.Column('description', db.String(255), default="")
 
-        Raises:
-            ValueError: If validation fails for the name attribute.
-        """
-        super().__init__()
+    def __init__(self, name, description="", **kwargs):
+        """Initialize an Amenity instance."""
+        super().__init__(**kwargs)
         self.name = name
         self.description = description
 

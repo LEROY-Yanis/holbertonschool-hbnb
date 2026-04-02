@@ -2,26 +2,28 @@
 """User model module."""
 
 import re
+from app import db, bcrypt
 from app.models import BaseModel
 
 
 class User(BaseModel):
     """User class representing a user in the system."""
 
-    def __init__(self, first_name, last_name, email, password=None, is_admin=False):
-        """Initialize a User instance.
+    __tablename__ = 'users'
 
-        Args:
-            first_name (str): The first name of the user. Required, max 50 chars.
-            last_name (str): The last name of the user. Required, max 50 chars.
-            email (str): The email address of the user. Required, must be valid format.
-            password (str): The password of the user. Optional for now.
-            is_admin (bool): Whether the user has admin privileges. Defaults to False.
+    _first_name = db.Column('first_name', db.String(50), nullable=False)
+    _last_name = db.Column('last_name', db.String(50), nullable=False)
+    _email = db.Column('email', db.String(120), nullable=False, unique=True)
+    _password = db.Column('password', db.String(128), nullable=False)
+    _is_admin = db.Column('is_admin', db.Boolean, default=False)
 
-        Raises:
-            ValueError: If validation fails for any attribute.
-        """
-        super().__init__()
+    # Relationships will be added later
+    places = db.relationship('Place', backref='owner', lazy=True)
+    reviews = db.relationship('Review', backref='user', lazy=True)
+
+    def __init__(self, first_name, last_name, email, password=None, is_admin=False, **kwargs):
+        """Initialize a User instance."""
+        super().__init__(**kwargs)
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
@@ -66,7 +68,6 @@ class User(BaseModel):
         """Set the email with validation."""
         if not value or not isinstance(value, str):
             raise ValueError("Email is required and must be a string")
-        # Simple email validation regex
         email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_regex, value):
             raise ValueError("Invalid email format")
@@ -86,27 +87,33 @@ class User(BaseModel):
 
     @property
     def password(self):
-        """Get the password."""
+        """Get the stored password hash."""
         return self._password
 
     @password.setter
     def password(self, value):
-        """Set the password."""
-        # Password will be hashed in Part 3
-        self._password = value
+        """Set the password as a bcrypt hash."""
+        if not value or not isinstance(value, str):
+            raise ValueError("Password is required and must be a string")
+
+        # Keep already-hashed bcrypt strings untouched.
+        if value.startswith('$2a$') or value.startswith('$2b$') or value.startswith('$2y$'):
+            self._password = value
+            return
+
+        self._password = bcrypt.generate_password_hash(value).decode('utf-8')
+
+    def hash_password(self, password):
+        """Hashes the password before storing it."""
+        self.password = password
+
+    def verify_password(self, password):
+        """Verifies if the provided password matches the hashed password."""
+        if not self.password:
+            return False
+        return bcrypt.check_password_hash(self.password, password)
 
     @staticmethod
     def create_user(first_name, last_name, email, password=None, is_admin=False):
-        """Factory method to create a new user.
-
-        Args:
-            first_name (str): The first name of the user.
-            last_name (str): The last name of the user.
-            email (str): The email address of the user.
-            password (str): The password of the user.
-            is_admin (bool): Whether the user has admin privileges.
-
-        Returns:
-            User: A new User instance.
-        """
+        """Factory method to create a new user."""
         return User(first_name, last_name, email, password, is_admin)

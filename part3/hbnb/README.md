@@ -1,167 +1,136 @@
-# HBnB Application
+# HBnB Application - Part 3
 
-A RESTful API application built with Flask and Flask-RESTX, following a layered architecture pattern.
+This version migrates persistence from in-memory storage to SQLAlchemy and adds full entity mapping, relationships, SQL scripts, and database diagram documentation.
+
+## Completed Milestones
+
+### Task 5 - SQLAlchemy Repository
+- Implemented generic `SQLAlchemyRepository` in `app/persistence/repository.py`.
+- Preserved repository interface contract (`add`, `get`, `get_all`, `update`, `delete`, `get_by_attribute`).
+- Added concrete repositories for domain entities (`UserRepository`, `PlaceRepository`, `ReviewRepository`, `AmenityRepository`).
+- Refactored facade to use SQLAlchemy repositories.
+
+### Task 6 - User Entity Mapping
+- Mapped `BaseModel` to SQLAlchemy (`id`, `created_at`, `updated_at`).
+- Mapped `User` entity with:
+   - `first_name`, `last_name`, `email`, `password`, `is_admin`
+   - unique email constraint
+   - password hashing via Flask-Bcrypt
+- Refactored facade user operations to route through `UserRepository`.
+
+### Task 8 - Entity Relationships
+- One-to-many:
+   - User -> Places
+   - User -> Reviews
+   - Place -> Reviews
+- Many-to-many:
+   - Place <-> Amenity via association table `place_amenity`
+- Added review uniqueness constraint per user/place pair.
+
+### Task 9 - SQL Scripts
+- Added full schema generation script: `sql/schema.sql`
+- Added initial data script: `sql/seed_data.sql`
+   - inserts admin user
+   - inserts initial amenities
+
+### Task 10 - ER Diagram (Mermaid)
+- Added diagram documentation in `docs/er_diagram.md`.
 
 ## Project Structure
 
 ```
 hbnb/
-├── app/                    # Core application code
-│   ├── __init__.py         # Flask application factory
-│   ├── api/                # Presentation layer (API endpoints)
+├── app/
+│   ├── __init__.py
+│   ├── api/
+│   │   └── v1/
+│   │       ├── amenities.py
+│   │       ├── auth.py
+│   │       ├── places.py
+│   │       ├── reviews.py
+│   │       └── users.py
+│   ├── models/
 │   │   ├── __init__.py
-│   │   └── v1/             # API version 1
-│   │       ├── __init__.py
-│   │       ├── users.py    # User endpoints
-│   │       ├── places.py   # Place endpoints
-│   │       ├── reviews.py  # Review endpoints
-│   │       └── amenities.py # Amenity endpoints
-│   ├── models/             # Business logic layer
-│   │   ├── __init__.py
-│   │   ├── user.py         # User model
-│   │   ├── place.py        # Place model
-│   │   ├── review.py       # Review model
-│   │   └── amenity.py      # Amenity model
-│   ├── services/           # Service layer (Facade pattern)
-│   │   ├── __init__.py     # Facade singleton instance
-│   │   └── facade.py       # HBnBFacade class
-│   └── persistence/        # Persistence layer
-│       ├── __init__.py
-│       └── repository.py   # In-memory repository implementation
-├── run.py                  # Application entry point
-├── config.py               # Configuration settings
-├── requirements.txt        # Python dependencies
-└── README.md               # Project documentation
+│   │   ├── amenity.py
+│   │   ├── place.py
+│   │   ├── review.py
+│   │   └── user.py
+│   ├── persistence/
+│   │   └── repository.py
+│   └── services/
+│       └── facade.py
+├── docs/
+│   └── er_diagram.md
+├── sql/
+│   ├── schema.sql
+│   └── seed_data.sql
+├── config.py
+├── requirements.txt
+└── run.py
 ```
-
-## Architecture
-
-The application follows a three-layer architecture:
-
-- **Presentation Layer** (`api/`): Handles HTTP requests and responses via Flask-RESTX
-- **Business Logic Layer** (`models/`): Contains domain models and business rules
-- **Persistence Layer** (`persistence/`): Manages data storage (currently in-memory, will be replaced with database)
-
-The **Facade Pattern** (`services/facade.py`) provides a unified interface for communication between layers.
 
 ## Installation
 
-1. Clone the repository and navigate to the project directory:
-   ```bash
-   cd part2/hbnb
-   ```
-
-2. Create a virtual environment (optional but recommended):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Running the Application
-
-Start the Flask development server:
-
 ```bash
-python run.py
+cd part3/hbnb
+python -m venv ../../.venv
+source ../../.venv/bin/activate
+pip install -r requirements.txt
 ```
-
-The application will be available at `http://127.0.0.1:5000`. The API documentation (Swagger UI) can be accessed at `http://127.0.0.1:5000/api/v1/`.
 
 ## Configuration
 
-Environment-specific settings are defined in `config.py`. You can set the following environment variables:
+Environment variables:
 
-- `SECRET_KEY`: Application secret key (default: 'default_secret_key')
+- `SECRET_KEY`
+- `JWT_SECRET_KEY`
+- `FLASK_ENV` (`development`, `testing`, `production`)
+- `DATABASE_URL` (used in production config)
 
-## Testing
+## Running The App
 
-### Running Unit Tests
-
-```bash
-# Run model tests
-python tests/test_models.py
-
-# Run API endpoint tests
-python -m unittest tests.test_api -v
-```
-
-### Running cURL Tests
-
-First, start the server in one terminal:
 ```bash
 python run.py
 ```
 
-Then run the cURL tests in another terminal:
+Swagger UI:
+
+- `http://127.0.0.1:5000/api/v1/`
+
+## SQL Scripts Usage
+
+Generate schema:
+
 ```bash
-bash tests/test_curl.sh
+sqlite3 hbnb.db < sql/schema.sql
 ```
 
-### Test Coverage
+Insert initial data:
 
-| Component | Tests | Status |
-|-----------|-------|--------|
-| User Model | 3 tests | ✅ |
-| Place Model | 3 tests | ✅ |
-| Review Model | 2 tests | ✅ |
-| Amenity Model | 2 tests | ✅ |
-| User API | 10 tests | ✅ |
-| Amenity API | 8 tests | ✅ |
-| Place API | 10 tests | ✅ |
-| Review API | 14 tests | ✅ |
+```bash
+sqlite3 hbnb.db < sql/seed_data.sql
+```
 
-### Validation Rules
+## Integration Notes (Task 5 Focus)
 
-| Entity | Attribute | Validation |
-|--------|-----------|------------|
-| User | first_name | Required, max 50 chars |
-| User | last_name | Required, max 50 chars |
-| User | email | Required, valid format, unique |
-| User | is_admin | Boolean |
-| Place | title | Required, max 100 chars |
-| Place | price | Required, positive number |
-| Place | latitude | -90.0 to 90.0 |
-| Place | longitude | -180.0 to 180.0 |
-| Place | owner_id | Required, must exist |
-| Review | text | Required |
-| Review | rating | 1 to 5 |
-| Review | user_id | Required, must exist |
-| Review | place_id | Required, must exist |
-| Amenity | name | Required, max 50 chars |
+To migrate a new entity from in-memory to SQLAlchemy repository:
 
-## API Endpoints
+1. Create a repository class inheriting from `SQLAlchemyRepository`.
+2. Inject the new repository in `HBnBFacade.__init__`.
+3. Replace direct in-memory calls with repository CRUD methods.
+4. Add entity-specific query helpers in the repository (if needed).
+5. Keep API/service contracts unchanged so higher layers are unaffected.
 
-### Users
-- `POST /api/v1/users/` - Create user
-- `GET /api/v1/users/` - List all users
-- `GET /api/v1/users/<id>` - Get user by ID
-- `PUT /api/v1/users/<id>` - Update user
+## Verification Suggestions
 
-### Amenities
-- `POST /api/v1/amenities/` - Create amenity
-- `GET /api/v1/amenities/` - List all amenities
-- `GET /api/v1/amenities/<id>` - Get amenity by ID
-- `PUT /api/v1/amenities/<id>` - Update amenity
+Run model checks:
 
-### Places
-- `POST /api/v1/places/` - Create place
-- `GET /api/v1/places/` - List all places
-- `GET /api/v1/places/<id>` - Get place by ID
-- `PUT /api/v1/places/<id>` - Update place
-- `GET /api/v1/places/<id>/reviews` - Get place reviews
+```bash
+python tests/test_models.py
+```
 
-### Reviews
-- `POST /api/v1/reviews/` - Create review
-- `GET /api/v1/reviews/` - List all reviews
-- `GET /api/v1/reviews/<id>` - Get review by ID
-- `PUT /api/v1/reviews/<id>` - Update review
-- `DELETE /api/v1/reviews/<id>` - Delete review
+Run API tests:
 
-## Future Development
-
-- Part 3 will replace the in-memory repository with a database-backed solution using SQLAlchemy
+```bash
+python -m unittest tests.test_api -v
+```

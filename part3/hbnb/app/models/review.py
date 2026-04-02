@@ -1,29 +1,38 @@
 #!/usr/bin/env python3
 """Review model module."""
 
+from app import db
 from app.models import BaseModel
 
 
 class Review(BaseModel):
     """Review class representing a review for a place in the system."""
 
-    def __init__(self, text, rating, place, user):
-        """Initialize a Review instance.
+    __tablename__ = 'reviews'
 
-        Args:
-            text (str): The content of the review. Required.
-            rating (int): Rating given to the place. Must be between 1 and 5.
-            place (Place): Place instance being reviewed.
-            user (User): User instance who wrote the review.
+    _text = db.Column('text', db.Text, nullable=False)
+    _rating = db.Column('rating', db.Integer, nullable=False)
+    _place_id = db.Column('place_id', db.String(36), db.ForeignKey('places.id'), nullable=False)
+    _user_id = db.Column('user_id', db.String(36), db.ForeignKey('users.id'), nullable=False)
 
-        Raises:
-            ValueError: If validation fails for any attribute.
-        """
-        super().__init__()
+    # Add unique constraint: one review per user per place
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'place_id', name='unique_user_place_review'),
+    )
+
+    def __init__(self, text, rating, place=None, user=None, place_id=None, user_id=None, **kwargs):
+        """Initialize a Review instance."""
+        super().__init__(**kwargs)
         self.text = text
         self.rating = rating
-        self.place = place
-        self.user = user
+        if place:
+            self._place_id = place.id
+        elif place_id:
+            self._place_id = place_id
+        if user:
+            self._user_id = user.id
+        elif user_id:
+            self._user_id = user_id
 
     @property
     def text(self):
@@ -52,37 +61,21 @@ class Review(BaseModel):
         self._rating = value
 
     @property
-    def place(self):
-        """Get the place."""
-        return self._place
+    def place_id(self):
+        """Get the place's ID."""
+        return self._place_id
 
-    @place.setter
-    def place(self, value):
-        """Set the place with validation."""
-        from app.models.place import Place
-        if not isinstance(value, Place):
-            raise ValueError("Place must be a valid Place instance")
-        self._place = value
-
-    @property
-    def user(self):
-        """Get the user."""
-        return self._user
-
-    @user.setter
-    def user(self, value):
-        """Set the user with validation."""
-        from app.models.user import User
-        if not isinstance(value, User):
-            raise ValueError("User must be a valid User instance")
-        self._user = value
+    @place_id.setter
+    def place_id(self, value):
+        """Set the place ID."""
+        self._place_id = value
 
     @property
     def user_id(self):
         """Get the user's ID."""
-        return self._user.id if self._user else None
+        return self._user_id
 
-    @property
-    def place_id(self):
-        """Get the place's ID."""
-        return self._place.id if self._place else None
+    @user_id.setter
+    def user_id(self, value):
+        """Set the user ID."""
+        self._user_id = value
